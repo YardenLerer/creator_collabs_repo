@@ -172,7 +172,7 @@ cannot run is not a check that passed.
 
 The build session is shared in full, including the wrong turns.
 
-- Build: LINK_HERE
+- Build: https://claude.ai/share/6784eaa6-a293-4d67-91a8-f0605f615e65
 
 A separate planning session came before it, where the reframe was argued out
 and the build prompts were written before any code ran. It is not shared, but
