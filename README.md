@@ -11,7 +11,7 @@ published and what may not. Six screens follow that from end to end:
 
 ## What it is for
 
-A marketing team knows it is short of footage — the sauna at San Jose, nobody
+A marketing team knows it is short of footage: the sauna at San Jose, nobody
 in frame, four vertical clips. It finds someone to shoot it, agrees what may be
 done with the result, books a date with the branch, and then decides clip by
 clip what goes into the library.
@@ -41,7 +41,7 @@ yet", not a low rating.
 
 **Privacy overrides everything.** A recognisable guest blocks a clip whatever
 the creator agreed to, and only a person can clear the flag. When the check
-cannot be read, the clip is held — a clip that was never checked is not a clip
+cannot be read, the clip is held: a clip that was never checked is not a clip
 that is clean.
 
 **Every decision is signed.** Approvals, rights entries, overrides, visit
@@ -57,7 +57,7 @@ put the old state back if they were refused.
 ```bash
 npm install
 npm run build     # produces creator-collabs.html, one self-contained file
-npm test          # twenty checks; nothing deploys unless they pass
+npm test          # twenty-one checks; nothing deploys unless they pass
 ```
 
 `npm install` is the only manual step. `npm test` bundles the app itself and
@@ -146,12 +146,12 @@ supabase/
   migrations/             the whole schema in one file
   functions/ai            the model, server side
   functions/media         placeholder photography
-test/                     twenty checks, run by all.mjs
+test/                     twenty-one checks, run by all.mjs
 ```
 
 ### The word matcher
 
-The model answers in plain language — "sauna", "nobody in frame". The product
+The model answers in plain language, "sauna", "nobody in frame". The product
 validates against a fixed vocabulary. `src/lib/ai.js` closes that gap in code,
 and it is deliberately dumb: exact match, then containment, and nothing else.
 A matcher that is right nine times in ten quietly mislabels the tenth clip and
@@ -175,6 +175,7 @@ nothing raw reaches a screen  the same thing, checked by rendering
 every screen renders          with the real components, above a size floor
 the app boots and runs        every stage opens
 a first load seeds            the only check that takes the empty-database path
+a stranger sees the product   no connect form for somebody with no credentials
 intake opens on click         the crash that shipped twice
 library opens on click        the crash that shipped twice
 library row shapes            including the shapes a view returns
@@ -196,12 +197,12 @@ the test makes sure it stays gone.
 
 ## Also in here
 
-- **`CHANGES.md`** — what moved after the first assembly and why, including
+- **`CHANGES.md`**, what moved after the first assembly and why, including
   the two that were found by review rather than by testing.
 
-- **`THINKING.md`** — how the problem was read, what the six screens are for,
+- **`THINKING.md`**, how the problem was read, what the six screens are for,
   what the model is never asked, and what was deliberately not built.
-- **`AI-WORK-LOG.md`** — how it was actually built, including the four failures
+- **`AI-WORK-LOG.md`**, how it was actually built, including the four failures
   worth reading: a schema written from a summary, the same assumption one layer
   down, an error message that never read the error, and a key stored under a
   name a lookup could not find.

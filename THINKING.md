@@ -2,58 +2,116 @@
 
 ## The problem
 
-The brief said "manage creator collaborations." The word that decides the shape
-of the product is **manage** — and managing a collaboration does not end when
-the creator hands the files over.
+The brief said "manage creator collaborations." Before deciding what that
+meant, I wrote down three questions I would have asked the business, and what
+each answer would have changed.
 
-A coordinator's actual job is a loop: work out what footage is missing, find
-someone to shoot it, agree what may be done with the result, get a branch to
-open its doors on a date, and then decide clip by clip what may be used. The
-handover is the middle of that loop, not the end of it. Footage that arrives
-and is never filed, described or cleared has cost money and produced nothing.
+**"Describe the last time an editor looked for a clip and could not find it.
+What did they do in the end?"**
 
-So organising the library is not a separate feature bolted onto a CRM. It is
-the second half of the same job, and the product is built as one flow rather
-than as a pipeline tool with an asset manager attached. `library` is a view
-over accepted clips joined to their collab — the footage never stops being
-part of the collaboration it came from, and the rights travel with it.
+Ask "is it hard for editors to find footage" and everyone says yes, because
+nobody likes their own system. Asking for a recent, specific incident tests
+whether the pain is real. And the second half is where the money is: shot it
+again, bought stock, or shipped a weaker edit. That is the cost, in currency,
+of the problem I would be solving.
 
-The second thing that shaped everything: **this business carries a consequence
-a scheduling tool does not.** A spa is full of people in robes who came to be
-private. A guest can walk through the back of a shot. If that clip is
-published, a real person's afternoon at a spa is on the internet.
+**"How many collaborations in the last three months, and how many of the clips
+you received ended up in an edit?"**
+
+Ten collaborations and a thousand clips is an organisation problem. Two and a
+hundred is a volume problem. Two hundred received and ten used is neither: it
+means they are getting the wrong footage, and no library will fix that.
+
+**"Who coordinates this today, and how many hours a week does it take them?"**
+
+If somebody is spending ten hours a week on scheduling, there is a real
+management problem. If it is twenty minutes, the interesting problem is
+somewhere else.
+
+### What the process actually looks like
+
+Eight enquiries arrive by email and Instagram. The coordinator has to decide
+who to invite, write each of them a brief, agree a date with the branch,
+receive a drive with thirty files named `IMG_4471`, go through them one by one
+to work out whether she got what she asked for, and write back saying what is
+missing.
+
+**I chose to build around step five, going through the footage, because it is
+the only action that solves two problems at once.**
+
+For the coordinator it is the heaviest thing she does. Thirty files, open each
+one, watch it, decide what it shows, cross-check it against what she asked
+for. One to two hours per collaboration, from scratch every time.
+
+But the real reason is that **the same action builds the library.** Nobody sits
+and tags hundreds of clips by hand, so an organised archive never comes into
+existence if it depends on somebody remembering to create it. Here it is a
+by-product of work she is doing for herself anyway. That is what makes it
+leverage rather than a time saving: she is paid back on the first
+collaboration, before a library exists, and the library builds itself behind
+her.
+
+### And what the word "manage" decides
+
+Managing a collaboration does not end when the creator leaves the branch. It
+ends when the clip she shot goes into an edit. A system that tracks up to
+handover solves today's pain and produces a drive nobody can find anything in a
+year from now.
+
+So the product runs end to end: it starts with defining what is missing and
+finishes with a tagged clip whose rights are clear. `library` is a view over
+accepted clips joined to their collab, so footage never stops being part of the
+collaboration it came from, and the rights travel with it.
+
+### The consequence this business carries
+
+A spa is full of people in robes who came to be private. A guest can walk
+through the back of a shot. If that clip is published, a real person's
+afternoon at a spa is on the internet.
 
 That is why `clip_privacy_flags` is its own table and why the rule is absolute:
 a recognisable face blocks a clip whatever the creator agreed to, only a person
 can clear the flag, and a check that could not be read holds the clip rather
 than passing it. A clip that was never checked is not a clip that is clean.
 
+### Who uses it, and who I left out
+
+The coordinator is in it every day. The branch manager enters twice, to accept
+a date and to mark that the visit happened, which is why he gets one screen
+that works on a phone. The editor searches and manages nothing. The creator is
+outside the system: she gets a brief, uploads footage, sees what is missing.
+
+I considered and rejected a fifth persona, a marketing manager with a
+dashboard. He would not have noticed if the screen disappeared, because he
+looks at it once a quarter. The numbers live on the coordinator's Today screen
+instead.
+
 ## The solution
 
 Six screens, in the order the work happens:
 
-**Gaps** — footage that does not exist yet. One sentence: which rooms, what
+**Gaps**, footage that does not exist yet. One sentence: which rooms, what
 happens in them, how many clips, which branches, by when.
 
-**Creators** — who could shoot it. Scoring is optional; a coordinator who
+**Creators**, who could shoot it. Scoring is optional; a coordinator who
 already knows who to call starts a collab directly.
 
-**Briefs** — one creator, one branch, and the gaps a single visit should close.
+**Briefs**: one creator, one branch, and the gaps a single visit should close.
 The rights are typed in here by a person.
 
-**Visits** — a date asked of a branch. It is a proposal until the branch
+**Visits**: a date asked of a branch. It is a proposal until the branch
 answers, and a decline carries a reason from a fixed list.
 
-**Intake** — what came back, one visit at a time, decided clip by clip.
+**Intake**, what came back, one visit at a time, decided clip by clip.
 
-**Library** — everything cleared for use, with what each clip is allowed to do
+**Library**, everything cleared for use, with what each clip is allowed to do
 and whether anybody has used it.
 
 **The brief is derived from the gap, not written freely.** The gap already
 holds every value a shot needs: room, scene, format, shot size, lighting,
 count. `shot_items.source` defaults to `derived` for that reason. Writing a
 shot list by hand would mean re-entering data that already exists, and every
-re-entry is a chance to enter it differently — at which point the brief and the
+re-entry is a chance to enter it differently, at which point the brief and the
 gap describe different footage and nothing downstream can tell which is right.
 
 The one part a person or a model does write is `instruction`: how to shoot it.
@@ -74,7 +132,7 @@ Four capabilities, all through one Edge Function (`supabase/functions/ai`):
 Two decisions matter more than the list.
 
 **The model answers in plain language; code matches it to the vocabulary.**
-`read_clip` returns `{"room":"sauna","action":"nobody in frame"}` — words a
+`read_clip` returns `{"room":"sauna","action":"nobody in frame"}`, words a
 person would say out loud. The product validates against a closed vocabulary.
 The gap between them is closed in `src/lib/ai.js` by `matchOne`, which is
 deliberately dumb: exact match on the label, then on the code, then a
@@ -138,12 +196,12 @@ The row-level policies allow anonymous read and write, and the migration says
 that at the point where they are created. An unlisted URL is not access
 control, and pretending otherwise would be worse than the gap itself.
 
-## Prioritisation — what was not built
+## Prioritisation, what was not built
 
 **A model-drafted shot list.** The Edge Function could write one. It does not,
 and this was the hardest thing to leave out because it demos well. The gap
 already contains every value a shot needs, so a model writing the list would
-replace a deterministic calculation with a guess — and nobody would re-check a
+replace a deterministic calculation with a guess, and nobody would re-check a
 field that looks filled in. What the model writes is the instruction, where a
 wrong answer costs a worse clip rather than a wrong record.
 
