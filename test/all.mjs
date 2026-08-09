@@ -27,6 +27,7 @@ const CHECKS = [
   ["every screen renders", "screens.cjs"],
   ["the app boots and runs", "mount.mjs"],
   ["a first load seeds", "empty.mjs"],
+  ["a stranger sees the product", "anon.mjs"],
   ["intake opens on click", "intake.mjs"],
   ["library opens on click", "libclick.mjs"],
   ["library row shapes", "lib.cjs"],

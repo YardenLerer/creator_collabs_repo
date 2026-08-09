@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { getConnection, saveConnection, forgetConnection, checkConnectionShape } from "./lib/config.js";
+import { getConnection, saveConnection, forgetConnection, checkConnectionShape, isDemoConnection } from "./lib/config.js";
 import { callAi, clipReadingToFields, clipReadingToPrivacy, findMedia, draftShotNotes } from "./lib/ai.js";
 import { Button, Chip, Field, Section, SingleSelect, Modal, Drawer, Sheet,
   Signature, SourceBadge } from "./components/Primitives.jsx";
@@ -86,7 +86,7 @@ const TAXONOMY_VERSION = 1;
  */
 const MODEL = "claude-sonnet-4-6";
 
-const BUILD = "2026-08-09 17:16 UTC";
+const BUILD = "2026-08-09 20:17 UTC";
 
 /* ---------------------------------------------------------------- 1. ROOM  */
 const ROOM_TYPE = [
@@ -5460,7 +5460,13 @@ const STAGES = [
  * "That is the secret key, go back and copy the other one" is a better answer
  * than a raw 401 from the network.
  */
-function ConnectScreen({ onConnected }) {
+/**
+ * Pointing this at a different database.
+ *
+ * Not a gate any more. It is reachable from settings, and it can be backed out
+ * of - somebody who opened it to look should not be stranded in a form.
+ */
+function ConnectScreen({ onConnected, onCancel }) {
   const [url, setUrl] = useState("");
   const [key, setKey] = useState("");
   const [problems, setProblems] = useState([]);
@@ -5520,10 +5526,15 @@ function ConnectScreen({ onConnected }) {
 
         {failure && <div className="mt-4"><Failure failure={failure} /></div>}
 
-        <div className="mt-6">
+        <div className="mt-6" style={{ display: "flex", gap: 9, alignItems: "center" }}>
           <Button variant="primary" onClick={connect} disabled={checking}>
             {checking ? "Checking…" : "Connect"}
           </Button>
+          {onCancel && (
+            <Button variant="ghost" onClick={onCancel} disabled={checking}>
+              Keep the current one
+            </Button>
+          )}
         </div>
 
         <p className="text-sm text-slate-500 leading-relaxed mt-8">
@@ -5560,6 +5571,7 @@ export default function App() {
   const [personaBranch, setPersonaBranch] = useState(BRANCHES[0].id);
   const [startCollab, setStartCollab] = useState(null);
   const [connected, setConnected] = useState(() => getConnection());
+  const [connectOpen, setConnectOpen] = useState(false);
   const [boot, setBoot] = useState({ status: "loading", failures: {} });
   const [thumbUrls, setThumbUrls] = useState({});
   const [find, setFind] = useState("");
@@ -5930,7 +5942,14 @@ export default function App() {
     go("intake", null);
   };
 
-  if (!connected) return <ConnectScreen onConnected={() => setConnected(getConnection())} />;
+  /* No gate. A connection always resolves - the browser's, a build-time one,
+     or the demonstration project - so the first thing anybody sees is the
+     product rather than a form. The connect screen is still reachable from
+     settings, for pointing this at a different database. */
+  if (connectOpen) {
+    return <ConnectScreen onConnected={() => { setConnected(getConnection()); setConnectOpen(false); }}
+      onCancel={() => setConnectOpen(false)} />;
+  }
 
   if (boot.status === "loading" || boot.status === "seeding") {
     return (
@@ -5954,7 +5973,7 @@ export default function App() {
             Nothing is broken on your side. Here is exactly what the database said.
           </p>
           <Failure failure={boot.fatal} onRetry={runBoot} />
-          <button onClick={() => { forgetConnection(); setConnected(null); }}
+          <button onClick={() => { forgetConnection(); setConnectOpen(true); }}
             className="text-sm text-slate-600 underline mt-5 cursor-pointer">
             Connect to a different database
           </button>
@@ -6092,8 +6111,34 @@ export default function App() {
           <Button size="sm" variant="ghost" className="w-full justify-start" onClick={loadWorkedExample} disabled={hasExample}>
             <Zap size={13} /> Load a worked example
           </Button>
-          <Button size="sm" variant="ghost" className="w-full justify-start" onClick={reseed}><RotateCcw size={13} /> Reset to sample data</Button>
-          <Button size="sm" variant="ghost" className="w-full justify-start" onClick={startEmpty}><Trash2 size={13} /> Start empty</Button>
+          {/* Both of these clear the tables before writing. On the shared
+              demonstration project deletes are refused by policy, and a
+              refused delete comes back as a success with no rows removed - so
+              these would report "done" and leave the old data in place. They
+              are not offered rather than offered and quietly wrong. */}
+          <Button size="sm" variant="ghost" className="w-full justify-start" onClick={reseed}
+            disabled={isDemoConnection()}><RotateCcw size={13} /> Reset to sample data</Button>
+          <Button size="sm" variant="ghost" className="w-full justify-start" onClick={startEmpty}
+            disabled={isDemoConnection()}><Trash2 size={13} /> Start empty</Button>
+          {isDemoConnection() && (
+            <p style={{ fontSize: 12, color: "var(--text-meta)", lineHeight: 1.5, margin: "2px 0 0" }}>
+              These two clear the tables first, and the demonstration project does not allow
+              deleting. Connect your own database below to use them.
+            </p>
+          )}
+
+          {/* The demonstration project is the default. Anybody who wants their
+              own data points this somewhere else from here. */}
+          <Button size="sm" variant="ghost" className="w-full justify-start"
+            onClick={() => setConnectOpen(true)}>
+            <Building2 size={13} /> Connect a different database
+          </Button>
+          {isDemoConnection() && (
+            <p style={{ fontSize: 12, color: "var(--text-meta)", lineHeight: 1.5, marginTop: 4 }}>
+              Running on the demonstration project. The data is invented and shared with anyone
+              else who has this page open.
+            </p>
+          )}
         </div>
     </>
   );
@@ -6370,11 +6415,11 @@ export {
 /**
  * The vocabulary and the rules that check answers against it.
  *
- * These are exported rather than copied into a second file. There used to be
- * a standalone validation.js that the tests ran against, and nine of its
+ * Exported rather than copied into a second file. There used to be a
+ * standalone validation.js that the tests ran against, and nine of its
  * fourteen functions had drifted from the ones the app actually used - so the
  * suite was green against code nobody shipped. One copy, and the test imports
- * this one.
+ * this one through the bundle.
  */
 export {
   TAXONOMY, ALL_TAXONOMY_VALUES, validateDescription, validatePrivacy,

@@ -1,25 +1,41 @@
 /* ============================================================================
    Where the connection details come from.
 
-   Two sources, in this order:
+   Three sources, in this order of precedence:
 
-     1. Build-time environment (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY),
-        for anyone running this locally with a .env file.
+     1. What the person typed into the connect screen, kept in this browser.
+     2. Build-time environment (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).
+     3. The demonstration project baked in below.
 
-     2. What the person typed into the connect screen, kept in this browser.
+   The browser wins because pointing this at your own database should not
+   require rebuilding it, and because somebody who has connected their own
+   project should not silently fall back to the demonstration one.
 
-   Source 2 exists because the key should not have to pass through a file, a
-   commit, or a build log to get here. It goes from the clipboard to the
-   browser and stops. Nobody else's machine ever sees it, and rotating it means
-   pasting a new one, not redeploying.
+   The demonstration project comes last and exists so that opening the
+   deployed URL shows a working system rather than a form. A reviewer with no
+   credentials is not a configuration problem to be solved by asking them to
+   go and find two values.
 
-   Neither value is a secret in the sense that matters - the publishable key is
-   designed to sit in browser code, and the README says plainly what that means
-   for this project. Keeping it out of the repository is about not leaving
-   copies lying around, not about pretending it is protected.
+   On the key being in here: `sb_publishable_*` is designed to sit in browser
+   code and is served to anyone who loads the page either way. What actually
+   governs access is the row-level policy, and this project's policies allow
+   anonymous read and write - which the README and the migration both say in
+   as many words. Embedding it changes who has to paste it, not who can reach
+   the data.
+
+   For a project holding real agreements, the connect screen and a policy
+   keyed to an authenticated user are the arrangement to use. This one holds
+   invented spas.
 ============================================================================ */
 
 const STORE_KEY = "creator-collabs.connection";
+
+/* The demonstration project. Publishable key, wide-open policies, fictional
+   data - see the note above before pointing anything real at this pattern. */
+const DEMO = {
+  url: "https://kkvboruhfkllhjapqhny.supabase.co",
+  key: "sb_publishable_6L6XTiQHuRQ7uMzz0bob-A_ZP1qc8GK",
+};
 
 const fromEnv = () => {
   const url = import.meta?.env?.VITE_SUPABASE_URL;
@@ -42,7 +58,19 @@ const fromBrowser = () => {
   }
 };
 
-export const getConnection = () => fromEnv() ?? fromBrowser();
+const fromDemo = () => ({ ...DEMO, source: "demo" });
+
+/**
+ * The connection in force.
+ *
+ * Browser first, then a build-time env, then the demonstration project. The
+ * order matters: a person who connected their own database keeps it, and
+ * everybody else gets something that works.
+ */
+export const getConnection = () => fromBrowser() ?? fromEnv() ?? fromDemo();
+
+/** Whether the app is running against the demonstration project. */
+export const isDemoConnection = () => !fromBrowser() && !fromEnv();
 
 export function saveConnection({ url, key }) {
   const clean = { url: String(url).trim().replace(/\/+$/, ""), key: String(key).trim() };

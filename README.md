@@ -146,7 +146,7 @@ supabase/
   migrations/             the whole schema in one file
   functions/ai            the model, server side
   functions/media         placeholder photography
-test/                     fifteen checks, run by all.sh
+test/                     twenty checks, run by all.mjs
 ```
 
 ### The word matcher
@@ -193,6 +193,18 @@ with `!important` silently defeated four rounds of redesign. It is gone, and
 the test makes sure it stays gone.
 
 ---
+
+## Also in here
+
+- **`CHANGES.md`** — what moved after the first assembly and why, including
+  the two that were found by review rather than by testing.
+
+- **`THINKING.md`** — how the problem was read, what the six screens are for,
+  what the model is never asked, and what was deliberately not built.
+- **`AI-WORK-LOG.md`** — how it was actually built, including the four failures
+  worth reading: a schema written from a summary, the same assumption one layer
+  down, an error message that never read the error, and a key stored under a
+  name a lookup could not find.
 
 ## Licence
 

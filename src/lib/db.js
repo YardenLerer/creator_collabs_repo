@@ -172,8 +172,30 @@ export const update = (table, id, patch) =>
     method: "PATCH", body: patch, headers: { Prefer: "return=representation" },
   });
 
-export const remove = (table, id) =>
-  request(`${table}?id=eq.${encodeURIComponent(id)}`, { method: "DELETE" });
+/**
+ * Deleting one row.
+ *
+ * It asks for the deleted row back, and treats an empty result as a refusal.
+ *
+ * Under row-level security a delete the policy does not permit is not an
+ * error: PostgREST reports success and removes nothing. Every other write in
+ * this file already refuses to claim more than the server confirmed, and this
+ * one used to be the exception - it would report "deleted" for a row still
+ * sitting in the table.
+ */
+export const remove = async (table, id) => {
+  const r = await request(`${table}?id=eq.${encodeURIComponent(id)}&select=id`,
+    { method: "DELETE", headers: { Prefer: "return=representation" } });
+  if (!r.ok) return r;
+  const rows = Array.isArray(r.data) ? r.data : [];
+  if (rows.length === 0) {
+    return fail("refused",
+      "The database accepted the request and removed nothing, which is what a "
+      + "delete looks like when the row-level policy does not allow it. "
+      + "Nothing was deleted.");
+  }
+  return r;
+};
 
 /**
  * Runs several reads together and keeps every failure separate.
