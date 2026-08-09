@@ -1,0 +1,23 @@
+{
+  "name": "creator-collabs",
+  "version": "1.0.0",
+  "private": false,
+  "description": "An internal desk for running content-creator visits at a spa chain: what footage is missing, who shoots it, what they may do with it, and what came back.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "pretest": "node test/bundle.mjs",
+    "test": "node test/all.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.5",
+    "jsdom": "^24.0.0",
+    "tailwindcss": "^3.4.0"
+  },
+  "dependencies": {
+    "lucide-react": "^0.383.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
